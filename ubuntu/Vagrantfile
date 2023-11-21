@@ -1,0 +1,43 @@
+# Path to your secrets folder
+secrets_folder = File.expand_path('C:/Users/Ace/repos/secrets')
+# Read the IP address from the ip_address.txt file inside the secrets folder
+ip_address_file = File.join(secrets_folder, 'private_network_ipv4_address.txt')
+# Read the IP addresses from the file and split them into an array
+ip_addresses = File.readlines(ip_address_file).map(&:strip)
+
+Vagrant.configure('2') do |config|
+  config.vm.box = 'ubuntu/trusty64'
+  config.vm.box_version = '>=20190429.0.1'
+  config.vm.hostname = 'devs'
+  # Loop through each IP address and configure a private network
+  ip_addresses.each do |ip|
+    config.vm.network 'private_network', ip: ip
+  end
+  config.vm.provider 'virtualbox' do |vb|
+    vb.name = 'ubuntu/trusty64'
+    vb.cpus = '2'
+    vb.memory = '2048'
+    vb.gui = true
+  end
+
+  config.vm.box_check_update = true
+  
+  # Share an additional folder from host to guest VM; 
+  # specify host and guest paths.
+  config.vm.synced_folder 'C:/Users/Ace/repos/vagrant_images/synced_folder_ubuntu', '/synced_folder_ubuntu'
+  # Improve isolation by disabling default sharing of code directory; 
+  # protects Vagrantfile from access within the Vagrant box.
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  # Enable provisioning with a shell script. Additional provisioners
+  # config.vm.provision "shell", inline: <<-SHELL
+  #   sudo apt-get update
+  #   sudo apt-get upgrade
+  #   sudo dpkg-query -l > /synced_folder/packages.txt
+
+  # SHELL
+  # Other Provisioners (e.g., Ansible, Chef, Puppet)
+  # config.vm.provision "ansible" do |ansible|
+  # ansible.playbook = "playbook.yml"
+
+end
